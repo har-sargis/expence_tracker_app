@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:expence_tracker_app/data/categories.dart';
 import 'package:expence_tracker_app/models/categroy.dart';
 import 'package:expence_tracker_app/models/grocery.dart';
 import 'package:flutter/material.dart';
+
+import 'package:http/http.dart' as http;
 
 class NewItem extends StatefulWidget {
   const NewItem({super.key});
@@ -18,20 +22,34 @@ class _NewItemState extends State<NewItem> {
   var _quantity = 1;
   var _category = categories[Categories.vegetables]!;
 
-  void _saveItem() {
+  void _saveItem() async {
     final isValid = _formKey.currentState!.validate();
     if (!isValid) {
       return;
     }
     _formKey.currentState!.save();
-    Navigator.of(context).pop(
-      GroceryItem(
-        id: DateTime.now().toString(),
-        name: _name,
-        quantity: _quantity,
-        category: _category,
-      ),
+    final url = Uri.https('expense-tracker-769fc-default-rtdb.firebaseio.com',
+        'grocery_list.json');
+    final res = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({
+        'name': _name,
+        'quantity': _quantity.toString(),
+        'category': _category.title,
+      }),
     );
+
+    if (res.statusCode == 200) {
+      // Navigator.of(context).pop();
+    }
+    // print(res.body);
+    if (!context.mounted) {
+      return;
+    }
+    Navigator.of(context).pop();
   }
 
   @override

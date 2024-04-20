@@ -1,6 +1,11 @@
+import 'dart:convert';
+
+import 'package:expence_tracker_app/data/categories.dart';
 import 'package:expence_tracker_app/models/grocery.dart';
 import 'package:expence_tracker_app/widgets/new_item.dart';
 import 'package:flutter/material.dart';
+
+import 'package:http/http.dart' as http;
 
 class GroceryList extends StatefulWidget {
   const GroceryList({super.key});
@@ -10,19 +15,42 @@ class GroceryList extends StatefulWidget {
 }
 
 class _GroceryListState extends State<GroceryList> {
-  final List<GroceryItem> _groceries = [];
+  List<GroceryItem> _groceries = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadItems();
+  }
+
+  void _loadItems() async {
+    final url = Uri.https('expense-tracker-769fc-default-rtdb.firebaseio.com',
+        'grocery_list.json');
+    final res = await http.get(url);
+    final Map<String, dynamic> data = json.decode(res.body);
+
+    final List<GroceryItem> loadedItems = [];
+    for (final item in data.entries) {
+      final category = categories.entries
+          .firstWhere(
+              (element) => element.value.title == item.value['category'])
+          .value;
+      loadedItems.add(GroceryItem(
+        id: item.key,
+        name: item.value['name'],
+        quantity: int.parse(item.value['quantity']),
+        category: category,
+      ));
+    }
+    setState(() {
+      _groceries = loadedItems;
+    });
+  }
 
   void _addGroceryItem() async {
-    final newItem =
-        await Navigator.of(context).push<GroceryItem>(MaterialPageRoute(
-      builder: (context) => const NewItem(),
-    ));
-
-    if (newItem != null) {
-      setState(() {
-        _groceries.add(newItem);
-      });
-    }
+    await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (context) => const NewItem()));
+    _loadItems();
   }
 
   @override
