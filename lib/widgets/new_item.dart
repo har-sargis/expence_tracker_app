@@ -42,14 +42,18 @@ class _NewItemState extends State<NewItem> {
       }),
     );
 
-    if (res.statusCode == 200) {
-      // Navigator.of(context).pop();
-    }
-    // print(res.body);
+    final id = json.decode(res.body)['name'];
     if (!context.mounted) {
       return;
     }
-    Navigator.of(context).pop();
+    Navigator.of(context).pop(
+      GroceryItem(
+        id: id,
+        name: _name,
+        quantity: _quantity,
+        category: _category,
+      ),
+    );
   }
 
   @override
