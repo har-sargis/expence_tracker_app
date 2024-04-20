@@ -33,30 +33,38 @@ class _NewItemState extends State<NewItem> {
     });
     final url = Uri.https('expense-tracker-769fc-default-rtdb.firebaseio.com',
         'grocery_list.json');
-    final res = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: json.encode({
-        'name': _name,
-        'quantity': _quantity.toString(),
-        'category': _category.title,
-      }),
-    );
 
-    final id = json.decode(res.body)['name'];
-    if (!context.mounted) {
+    try {
+      final res = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'name': _name,
+          'quantity': _quantity.toString(),
+          'category': _category.title,
+        }),
+      );
+
+      final id = json.decode(res.body)['name'];
+      if (!context.mounted) {
+        return;
+      }
+      Navigator.of(context).pop(
+        GroceryItem(
+          id: id,
+          name: _name,
+          quantity: _quantity,
+          category: _category,
+        ),
+      );
+    } catch (error) {
+      setState(() {
+        _isLoading = false;
+      });
       return;
     }
-    Navigator.of(context).pop(
-      GroceryItem(
-        id: id,
-        name: _name,
-        quantity: _quantity,
-        category: _category,
-      ),
-    );
   }
 
   @override
